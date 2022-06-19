@@ -1,0 +1,607 @@
+<!-- This code will NOT be maintained -->
+
+<!-- Modal component, by Marina Mosti - https://codepen.io/immarina -->
+<!-- Validation is according to the test's requests -->
+<!-- Code is all in English, but noums are in Portuguese because of the test -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lista de Contatos</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@2.7.1/dist/quasar.prod.css" rel="stylesheet" type="text/css">
+
+    <style>
+        :root {
+            --c1: #6b9080;
+            --c2: #a4c3b2;
+            --c3: #cce3de;
+            --c4: #eaf4f4;
+            --c5: #f6fff8;
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+        
+        .page-bg {
+            background-color: var(--c1);
+            height: 100vh;
+        }
+        
+        .app-bg {
+            background-color: var(--c5);
+            border-radius: 30px;
+            width: 90vw;
+            max-width: 800px;
+            height: 95vh;
+            padding: 20px;
+        }
+        
+        .app-title {
+            text-align: center;
+            font-size: 20px;
+            text-transform: uppercase;
+            color: var(--c1);
+            letter-spacing: 1px;
+            font-weight: 400;
+            padding-bottom: 20px;
+        }
+
+        .modal-mask {
+            position: fixed;
+            z-index: 9998;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: table;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-wrapper {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .modal-container {
+            width: 300px;
+            margin: 0px auto;
+            padding: 20px 30px;
+            background-color: var(--c5);
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+            transition: all 0.3s ease;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+
+        .modal-close-button {
+            position: relative;
+        }
+
+        .modal-header {
+            margin-top: 0;
+            text-align: center;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: var(--c1);
+            letter-spacing: 1px;
+            font-weight: 400;
+            padding-bottom: 20px;
+        }
+
+        .modal-info {
+            color: var(--c2);
+            padding-bottom: 20px;
+        }
+
+        .modal-enter-from, .modal-leave-to {
+            opacity: 0;
+        }
+
+        .modal-enter-active .modal-container,
+        .modal-leave-active .modal-container {
+            -webkit-transform: scale(1.1);
+            transform: scale(1.1);
+        }
+
+        .form-row {
+            padding-bottom: 10px;
+        }
+
+        .form-row-label {
+            color: var(--c1);
+            letter-spacing: 1px;
+        }
+
+        .form-row-input {
+            width: 100%;
+        }
+
+        .form-error {
+            padding: 10px 25px;
+            font-size: 15px;
+            color: red;
+            letter-spacing: 1px;
+        }
+
+        .app-list-header {
+          padding: 10px 25px;
+          font-size: 15px;
+          color: var(--c1);
+          letter-spacing: 1px;
+        }
+        
+        .app-list {
+            overflow-y: auto;
+            max-height: 90%;
+        }
+        
+        .app-list-item {
+          margin-bottom: 10px;
+          padding: 10px 25px;
+          border-radius: 30px;
+          background-color: var(--c4);
+          color: var(--c1);
+        }
+        
+        .app-list-item:hover {
+          background-color: var(--c3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-bg">
+        <div class="fit row justify-center items-start content-center">
+
+            <div class="app-bg">
+                <div class="row app-title justify-center content-center">
+                    <span>Lista de Contatos</span>
+                </div>
+      
+                <div class="row app-list">
+                    <div class="fit column">
+      
+                        <div id="q-app" v-cloak>
+
+                            <div class="app-list-header row">
+                                <div class="col-6">
+                                    Nome
+                                </div>
+                                <div class="col-4">
+                                    Telefone
+                                </div>
+                                <div class="col-2">
+                                    <q-btn flat round
+                                        color="primary"
+                                        icon="add"
+                                        @click="showModalAdd = true"
+                                        size="12px">
+                                    </q-btn>
+                                </div>
+                            </div>
+
+                            <!-- Add Modal-->
+                            <transition name="modal">
+                                <modal v-if="showModalAdd"
+                                    @close="showModalAdd = false"
+                                    @add-modal2root="(contact) => handleAddContact(contact)"
+                                >
+                                    <template v-slot:header>
+                                        Adicionar Contato
+                                    </template>
+                                </modal>
+                            </transition>
+                            <!-- /Add Modal -->
+
+                            <div>
+                                <contact-entry
+                                    v-for="(contact, index) in contactList"
+                                    :key="index"
+                                    :name="contact.name"
+                                    :phone="contact.phone"
+                                    :index="index"
+
+                                    @delete="(index) => handleDeleteContact(index)"
+                                    @edit="({contact, index}) => handleEditContact(contact, index)"
+                                />
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- <script src="https://unpkg.com/vue@3"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.7.1/dist/quasar.umd.prod.js"></script>
+    <script>
+        const { useQuasar } = Quasar
+        
+        let app = Vue.createApp({
+            data() {
+                return {
+                    contactList: [
+                        {name: 'Fábio Batisteti', phone: '1412345678'}
+                    ],
+                    showModalAdd: false
+                }
+            },
+
+            components: [
+                'modal', 'contact-entry', 'contact-form'
+            ],
+
+            methods: {
+                handleAddContact(contact) {
+                    this.contactList.push(contact)
+                    this.showModalAdd = false
+                },
+
+                handleEditContact(contact, index) {
+                    this.contactList[index].name = contact.name
+                    this.contactList[index].phone = contact.phone
+                },
+
+                handleDeleteContact(index) {
+                    this.contactList.splice(index,1)
+                }
+            }
+        })
+
+        app.component('modal', {
+            template: `
+            <div class="modal-mask">
+                <div class="modal-wrapper"
+                    @click="$emit('close')"
+                >
+                    <div class="modal-container"
+                        @click.stop=""
+                    >
+                        <div class="modal-header">
+                            <slot name="header">
+                                Informações do Contato
+                            </slot>
+                        </div>
+                        
+                        <div class="modal-info">
+                            <slot name="info" />
+                        </div>
+
+                        <contact-form
+                            :currentName="currentName"
+                            :currentPhone="currentPhone"
+                            @add-form2modal="(contact) => handleAddContact(contact)"
+                            @edit-form2modal="(contact) => handleEditContact(contact)"
+                        />
+                    </div>
+                </div>
+            </div>
+            `,
+
+            props: [
+                'currentName', 'currentPhone'
+            ],
+
+            components: [
+                'contact-form'
+            ],
+
+            data() {
+                return {
+                    contact: {
+                        name: '', phone: ''
+                    }
+                }
+            },
+
+            methods: {
+                handleAddContact(contact) {
+                    this.contact.name = contact.name
+                    this.contact.phone = contact.phone
+                    this.$emit('add-modal2root', this.contact)
+                },
+
+                handleEditContact(contact) {
+                    this.contact.name = contact.name
+                    this.contact.phone = contact.phone
+                    this.$emit('edit-modal2entry', this.contact)
+                }
+            }
+        })
+        
+        app.component('contact-form', {
+            template: `
+            <form @submit.prevent="handleSubmit">
+                <div class="column">
+                    <div class="row form-row">
+                        <contact-form-input
+                            v-model="nameInput"
+                            :label="nameLabel"
+                        />
+                    </div>
+                    
+                    <div class="row form-row">
+                        <contact-form-input
+                            v-model="phoneInput"
+                            :label="phoneLabel"
+                        />
+                    </div>
+
+                    <div class="form-error">
+                        {{ errorMessage }}
+                    </div>
+
+                    <div class="row form-row">
+                        <q-btn class="full-width" icon="check" type="submit" color="primary" />
+                    </div>
+                </div>
+            </form>
+            `,
+
+            props: [
+                'currentName', 'currentPhone'
+            ],
+
+            components: [
+                'contact-form-input'
+            ],
+
+            created() {
+                this.nameInput = this.currentName
+                this.phoneInput = this.currentPhone
+            },
+            
+            data() {
+                return {
+                    nameLabel: "Nome",
+                    nameInput: '',
+                    phoneLabel: "Telefone",
+                    phoneInput: '',
+                    contact: {},
+                    errorMessage: ""
+                }
+            },
+
+            methods: {
+                validateName() {
+                    // check if two or more names
+                    if (this.nameInput.indexOf(' ') == -1) {
+                        this.errorMessage = "Insira pelo menos dois nomes"
+                        return false
+                    }
+
+                    // minimum 2 words with 3 letters
+                    let names = this.nameInput.split(' ')
+                    let count = 0
+                    names.forEach(name => { if (name.length >= 3) count++ })
+                    if (count < 2) {
+                        this.errorMessage = "Pelo menos dois nomes devem ter mais de três caracters"
+                        return false
+                    }
+
+                    return true
+                    // not validating for letters only because some company names can have numbers
+                },
+
+                validatePhone() {
+                    // numbers only
+                    if (isNaN(this.phoneInput)) {
+                        this.errorMessage = "Telefone deve conter apenas números"
+                        return false
+                    }
+
+                    return true
+                },
+
+                handleSubmit() {
+                    if(!this.validateName()) return    
+                    if(!this.validatePhone()) return
+
+                    if (typeof this.currentName === 'undefined') {
+                        // is new
+                        this.contact.name = this.nameInput
+                        this.contact.phone = this.phoneInput
+                        this.$emit('add-form2modal', this.contact)
+                    } else {
+                        // is edit
+                        this.contact.name = this.nameInput
+                        this.contact.phone = this.phoneInput
+                        this.$emit('edit-form2modal', this.contact)
+                    }
+                }
+            }
+        })
+
+        app.component('contact-form-input', {
+            template: `
+            <div>
+                <div class="form-row-label">
+                    {{ label }}
+                </div>
+                
+                <div class="form-row-input">
+                    <q-input v-if="label == 'Nome'"
+                        v-model="inputValue"
+                        placeholder="Nome Sobrenome"
+                        required
+                    /></q-input>
+                    <q-input v-else
+                        id="phone"
+                        v-model="inputValue"
+                        maxlength="14"
+                        minlength="14"
+                        placeholder="(12) 3456-7890"
+                        unmasked-value
+                        mask="(##) ####-####"
+                        required
+                    /></q-input>
+                </div>
+            </div>
+            `,
+
+            props: [
+                'label', 'modelValue'
+            ],
+
+            computed: {
+                inputValue: {
+                    get() { return this.modelValue },
+                    set(value) { this.$emit('update:modelValue', value) }
+                }
+            },
+
+            methods: {
+                formatPhone() {
+                    this.inputValue = '('+ this.inputValue
+                }
+            }
+        })
+
+        app.component('contact-entry', {
+            template: `
+            <div v-if="DDD(phone)" class="app-list-item row" style="background-color: skyblue; color: black;">
+                <div class="col-6">
+                    {{ name }}
+                </div>
+                <div class="col-4">
+                    {{ mask(phone) }}
+                </div>
+                <div class="col-2">
+                    <q-btn flat round
+                        color="primary"
+                        icon="edit"
+                        @click="showModalEdit = true"
+                        size="12px"
+                    ></q-btn>
+
+                    <q-btn flat round
+                        color="red"
+                        icon="delete"
+                        @click="handleDelete"
+                        size="12px"
+                    ></q-btn>
+                </div>
+            </div>
+            <div v-else class="app-list-item row">
+                <div class="col-6">
+                    {{ name }}
+                </div>
+                <div class="col-4">
+                    {{ mask(phone) }}
+                </div>
+                <div class="col-2">
+                    <q-btn flat round
+                        color="primary"
+                        icon="edit"
+                        @click="showModalEdit = true"
+                        size="12px"
+                    ></q-btn>
+
+                    <q-btn flat round
+                        color="red"
+                        icon="delete"
+                        @click="handleDelete"
+                        size="12px"
+                    ></q-btn>
+                </div>
+            </div>
+
+            <!-- Edit Modal -->
+            <transition name="modal">
+                <modal v-if="showModalEdit"
+                    :currentName="name"
+                    :currentPhone="phone"
+                    @close="showModalEdit = false"
+                    @edit-modal2entry="(contact) => handleEditContact(contact)"
+                >
+                    <template v-slot:header>
+                        Alterar Contato
+                    </template>
+
+                    <template v-slot:info>
+                        <div class="column">
+                            <div class="row">
+                                {{ name }}
+                            </div>
+                            <div class="row">
+                                {{ mask(phone) }}
+                            </div>
+                        </div>
+                    </template>
+                </modal>
+            </transition>
+            <!-- /Edit Modal -->
+            `,
+
+            components: [
+                'modal'
+            ],
+
+            props: [
+                'name', 'phone', 'index'
+            ],
+
+            data() {
+                return {
+                    showModalEdit: false,
+                    class: "app-list-item row"
+                }
+            },
+
+            methods: {
+                handleDelete() {
+                    this.$emit('delete', this.index)
+                },
+
+                handleEditContact(contact) {
+                    let temp = {contact: contact, index: this.index}
+                    this.$emit('edit', temp)
+                    this.showModalEdit = false
+                },
+
+                mask(phone) {
+                    let maskedPhone = '('
+                    
+                    // >(xx) <
+                    maskedPhone = maskedPhone + phone.slice(0,2) + ') '
+                    phone = phone.slice(2)
+
+                    // >(xx) xxxx-<
+                    maskedPhone = maskedPhone + phone.slice(0,4) + '-'
+                    phone = phone.slice(4)
+
+                    // >(xx) xxxx-xxxx<
+                    maskedPhone = maskedPhone + phone
+
+                    return maskedPhone
+                },
+
+                DDD(phone) {
+                    if (phone.slice(0,2) == 11) return true
+                }
+            }
+        })
+
+        app.use(Quasar, {
+            config: {
+                brand: {
+                    primary: '#6b9080'
+                }
+            }
+        })
+        app.mount('#q-app')
+    </script>
+</body>
+</html>
